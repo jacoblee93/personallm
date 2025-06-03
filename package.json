@@ -1,0 +1,22 @@
+{
+  "name": "personollama",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx server.ts",
+    "format": "prettier --write ."
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.8",
+    "@types/node": "^22.15.29",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  }
+}
