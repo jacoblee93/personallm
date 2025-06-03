@@ -10,13 +10,14 @@
   "author": "",
   "license": "MIT",
   "description": "",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "tsx": "^4.19.4"
+  },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.8",
     "@types/node": "^22.15.29",
     "prettier": "^3.5.3",
-    "tsx": "^4.19.4"
-  },
-  "dependencies": {
-    "dotenv": "^16.5.0"
+    "typescript": "^5.8.3"
   }
 }

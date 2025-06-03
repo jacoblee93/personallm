@@ -1,6 +1,5 @@
 import "dotenv/config";
 
-import https from "node:https";
 import http from "node:http";
 import { IncomingMessage, ServerResponse } from "node:http";
 
@@ -15,8 +14,7 @@ if (!API_KEY) {
   throw new Error("API_KEY is not set");
 }
 
-const server = https.createServer(
-  {},
+const server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
     if (req.headers["authorization"] !== `Bearer ${process.env.API_KEY}`) {
       res.writeHead(401);
