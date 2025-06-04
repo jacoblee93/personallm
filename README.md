@@ -1,6 +1,6 @@
 # 🦙 PersonalLM
 
-This repo helps you provision a personal and private LLM inference endpoint on [Google Cloud Run GPUs](https://cloud.google.com/run). The endpoint is OpenAI and LangChain-compatible, and can be used as a drop-in substitute for providers who support these standards.
+This repo helps you provision a personal and private LLM inference endpoint on [Google Cloud Run GPUs](https://cloud.google.com/run). The endpoint is OpenAI and LangChain-compatible, allows for authentication via API key, and can be used as a drop-in substitute for providers who support these standards.
 
 ```python
 from openai import OpenAI
@@ -18,7 +18,7 @@ response = client.chat.completions.create(
 )
 ```
 
-Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
+Once deployed, it requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
 
 It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
