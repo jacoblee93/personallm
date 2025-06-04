@@ -8,17 +8,24 @@ const TARGET_HOST = process.env.TARGET_HOST || "localhost";
 const TARGET_PORT = process.env.TARGET_PORT || 11434;
 const PORT = process.env.PORT || 8080;
 
-const API_KEY = process.env.API_KEY;
+const API_KEYS = process.env.API_KEYS?.split(",") || [];
 
-if (!API_KEY) {
-  throw new Error("API_KEY is not set");
+if (API_KEYS.length === 0) {
+  throw new Error("API_KEYS is not set");
 }
 
 const server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
-    if (req.headers["authorization"] !== `Bearer ${process.env.API_KEY}`) {
+    if (!req.headers["authorization"]?.startsWith("Bearer ")) {
       res.writeHead(401);
-      res.end("Unauthorized");
+      res.end("Unknown authorization scheme - use Bearer <API_KEY>");
+      return;
+    }
+
+    const apiKey = req.headers["authorization"]?.slice("Bearer ".length);
+    if (!apiKey || !API_KEYS.includes(apiKey)) {
+      res.writeHead(401);
+      res.end("Invalid API key");
       return;
     }
 
