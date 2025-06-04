@@ -1,7 +1,6 @@
 # 🦙 PersonalLM
 
-This repo helps you provision a personal and private OpenAI and LangChain-compatible LLM inference endpoint
-on [Google Cloud Run GPUs](https://cloud.google.com/run). Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
+This repo helps you provision a personal and private LLM inference endpoint on [Google Cloud Run GPUs](https://cloud.google.com/run). The endpoint is OpenAI and LangChain-compatible, and can be used as a drop-in replacement for other inference providers.
 
 ```python
 from openai import OpenAI
@@ -12,12 +11,14 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-  model="qwen3:14b",
-  messages=[
-    {"role": "user", "content": "What is 2 + 2?"}
-  ]
+    model="qwen3:14b",
+    messages=[
+      {"role": "user", "content": "What is 2 + 2?"}
+    ]
 )
 ```
+
+Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
 
 It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
@@ -133,12 +134,14 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-  model="qwen3:14b",
-  messages=[
-    {"role": "user", "content": "What is 2 + 2?"}
-  ]
+    model="qwen3:14b",
+    messages=[
+      {"role": "user", "content": "What is 2 + 2?"}
+    ]
 )
 ```
+
+See [OpenAI's SDK docs](https://platform.openai.com/docs/overview) for examples of advanced features such as [function/tool calling](https://platform.openai.com/docs/guides/function-calling?api-mode=chat).
 
 ### LangChain
 
@@ -162,6 +165,8 @@ model = ChatOllama(
 response = model.invoke("What is 2 + 2?")
 ```
 
+See [LangChain's docs](https://python.langchain.com/) for examples of advanced features such as [function/tool calling](https://python.langchain.com/docs/how_to/tool_calling/).
+
 ### OpenAI JS SDK
 
 ```bash
@@ -183,6 +188,8 @@ const result = await client.chat.completions.create({
 });
 ```
 
+See [OpenAI's SDK docs](https://platform.openai.com/docs/overview) for examples of advanced features such as [function/tool calling](https://platform.openai.com/docs/guides/function-calling?api-mode=chat).
+
 ### LangChain.js
 
 ```bash
@@ -200,11 +207,15 @@ const model = new ChatOllama({
 const result = await model.invoke("What is 2 + 2?");
 ```
 
+See [LangChain's docs](https://js.langchain.com/) for examples of advanced features such as [function/tool calling](https://js.langchain.com/docs/how_to/tool_calling/).
+
+### Latency
+
 Keep in mind that there will be additional cold start latency if the endpoint has not been used in some time.
 
 ## 🔧 Model customization
 
-The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at ~20-25 output tokens per second. This model is quite capable and also supports [tool calling](https://ollama.com/blog/tool-support), which makes it more useful when building agentic flows, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
+The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at ~20-25 output tokens per second. This model is quite capable and also supports [function/tool calling](https://ollama.com/blog/tool-support), which makes it more useful when building agentic flows, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
 
 To customize the served model, open your `Dockerfile` and modify the `ENV MODEL qwen3:14b` line to be a different model from [Ollama's registry](https://ollama.com/search):
 
