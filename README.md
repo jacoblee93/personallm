@@ -2,28 +2,13 @@
 
 This repo helps you provision a personal and private LLM inference endpoint on [Google Cloud Run GPUs](https://cloud.google.com/run). The endpoint is OpenAI and LangChain-compatible, allows for authentication via API key, and can be used as a drop-in substitute for providers who support these standards.
 
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://mypersonalendpoint.europe-west1.run.app/v1",
-    api_key="GENERATED_API_KEY",
-)
-
-response = client.chat.completions.create(
-    model="qwen3:14b",
-    messages=[
-      {"role": "user", "content": "What is 2 + 2?"}
-    ]
-)
-```
+![](/static/img/cover.png)
 
 Once deployed, it requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
 
-This project extends [Google's official guide](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) by adding a proxy server that runs in the Cloud Run instance that handles auth and forwards requests
+This project extends [Google's official guide](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) by adding a proxy server that runs in the Cloud Run instance, which handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
-Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit
-model size. See the [model customization](#-model-customization) section below for more details.
+Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit effective model size. See the [model customization](#-model-customization) section below for more details.
 
 ## 🏎️ Quickstart
 
@@ -112,7 +97,7 @@ gcloud run deploy personallm \
 
 When prompted with something like `Allow unauthenticated invocations to [personallm] (y/N)?`, you should respond with `y`. The internal proxy will handle authentication, and we want our endpoint to be reachable from anywhere for ease of use.
 
-Note that deployments are quite slow since model weights are bundled directly into the Dockerfile - expect this step to take around 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
+Note that deployments are quite slow since model weights are bundled directly into the Dockerfile - expect this step to take upwards of 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
 
 ## 💪 Trying it out
 
@@ -215,7 +200,7 @@ Keep in mind that there will be additional cold start latency if the endpoint ha
 
 ## 🔧 Model customization
 
-The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at ~20-25 output tokens per second. This model is quite capable and also supports [function/tool calling](https://ollama.com/blog/tool-support), which makes it more useful when building agentic flows, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
+The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at ~20-25 output tokens per second. This model is quite capable and also supports [function/tool calling](https://ollama.com/blog/tool-support), which makes it more useful when building agentic flows, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run the popular [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
 
 To customize the served model, open your `Dockerfile` and modify the `ENV MODEL qwen3:14b` line to be a different model from [Ollama's registry](https://ollama.com/search):
 
