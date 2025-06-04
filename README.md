@@ -12,7 +12,8 @@ model size. See the [model choice](#-model-customization) section below for more
 
 ### Setting up Google Cloud resources
 
-> [!NOTE] The initial setup for this project is the same as the official Cloud Run guide [here](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama).
+> [!NOTE]
+> The initial setup for this project is the same as the official Cloud Run guide [here](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama).
 
 If you don't already have a Google Cloud account, you will first need to [sign up](https://cloud.google.com/).
 
@@ -26,7 +27,7 @@ GPUs are not part of the default project quota, so you will need to submit a quo
 
 ![](/static/img/quotas.png)
 
-Enter a value (I used `5`), and submit a request. While the prompt claims it may take a few days for the request to process, mine did almost immediately.
+Enter a value (e.g. `5`), and submit a request. Google claims that increase requests may take a few days to process, but you may receive an approval email almost immediately in practice.
 
 Finally, you will need to set up proper IAM permissions for your project. Navigate to [this page](https://console.cloud.google.com/projectselector2/iam-admin/iam) and select your project, then press `Grant Access`. In the resulting modal, paste the following permissions into the filter window and add them one by one to the principal:
 
@@ -59,7 +60,7 @@ Rename the `.env.example` file to `.env`. Run something similar to the following
 openssl rand -base64 32
 ```
 
-Then paste this value into the `API_KEYS` field. You can provide multiple API keys by comma separating them here, so make sure that none of your key values contain commas.
+Paste this value into the `API_KEYS` field. You can provide multiple API keys by comma separating them here, so make sure that none of your key values contain commas.
 
 Install and initialize the `gcloud` CLI if you haven't already by [following these instructions](https://cloud.google.com/sdk/docs/install). If you already have the CLI installed, you may need to run `gcloud components update` to make sure you are on the latest CLI version.
 
@@ -92,7 +93,7 @@ gcloud run deploy personallm \
   --timeout=600
 ```
 
-When prompted with something like `Allow unauthenticated invocations to [personallm] (y/N)?`, you should respond with `y`, since the internal proxy will handle authentication.
+When prompted with something like `Allow unauthenticated invocations to [personallm] (y/N)?`, you should respond with `y`. The internal proxy will handle authentication, and we want our endpoint to be reachable from anywhere for ease of use.
 
 Note that deployments are quite slow since model weights are bundled directly into the Docekrfile - expect this step to take around 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
 
@@ -100,9 +101,94 @@ Note that deployments are quite slow since model weights are bundled directly in
 
 You can call your endpoint in a similar way to how you'd call an OpenAI model, only using your generated API key and your provisioned endpoint. Here are some examples:
 
+### OpenAI Python SDK
+
+```bash
+uv add openai
+```
+
+```python
+from openai import OpenAI
+
+# Note the /v1 suffix
+client = OpenAI(
+    base_url='https://YOUR_SERVICE_URL/v1',
+    api_key='YOUR_API_KEY',
+)
+
+response = client.chat.completions.create(
+  model="qwen3:14b",
+  messages=[
+    {"role": "user", "content": "What is 2 + 2?"}
+  ]
+)
+```
+
+### LangChain
+
+```bash
+uv add langchain-ollama
+```
+
+```python
+from langchain_ollama import ChatOllama
+
+model = ChatOllama(
+    model="qwen3:14b",
+    base_url="https:/YOUR_SERVICE_URL",
+    client_kwargs={
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+)
+
+response = model.invoke("What is 2 + 2?")
+```
+
+### OpenAI JS SDK
+
+```bash
+npm install openai
+```
+
+```js
+import OpenAI from "openai";
+
+// Note the /v1 suffix
+const client = new OpenAI({
+  baseURL: "https://YOUR_SERVICE_URL/v1",
+  apiKey: "YOUR_API_KEY",
+});
+
+const result = await client.chat.completions.create({
+  model: "qwen3:14b",
+  messages: [{ role: "user", content: "What is 2 + 2?" }],
+});
+```
+
+### LangChain.js
+
+```bash
+npm install @langchain/ollama @langchain/core
+```
+
+```js
+const model = new ChatOllama({
+  model: "qwen3:14b",
+  baseUrl: "https://YOUR_SERVICE_URL",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+  },
+});
+const result = await model.invoke("What is 2 + 2?");
+```
+
+Keep in mind that there will be additional cold start latency if the endpoint has not been used in some time.
+
 ## 🔧 Model customization
 
-The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at around 25 tokens per second. This model is quite capable and also supports [tool calling](https://ollama.com/blog/tool-support), which makes it more useful for things like agents, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
+The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at ~20-25 output tokens per second. This model is quite capable and also supports [tool calling](https://ollama.com/blog/tool-support), which makes it more useful when building agentic flows, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
 
 To customize the served model, open your `Dockerfile` and modify the `ENV MODEL qwen3:14b` line to be a different model from [Ollama's registry](https://ollama.com/search):
 
