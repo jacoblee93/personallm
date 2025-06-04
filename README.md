@@ -6,7 +6,7 @@ This repo helps you provision a personal and private LLM inference endpoint on [
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://myendpoint.europe-west1.run.app/v1",
+    base_url="https://mypersonalendpoint.europe-west1.run.app/v1",
     api_key="GENERATED_API_KEY",
 )
 
@@ -20,7 +20,7 @@ response = client.chat.completions.create(
 
 Once deployed, it requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
 
-It contains a proxy server that runs in the Cloud Run instance that handles auth and forwards requests
+This project extends [Google's official guide](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) by adding a proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
 Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit
 model size. See the [model customization](#-model-customization) section below for more details.
@@ -46,7 +46,7 @@ GPUs are not part of the default project quota, so you will need to submit a quo
 
 Enter a value (e.g. `5`), and submit a request. Google claims that increase requests may take a few days to process, but you may receive an approval email almost immediately in practice.
 
-Finally, you will need to set up proper IAM permissions for your project. Navigate to [this page](https://console.cloud.google.com/projectselector2/iam-admin/iam) and select your project, then press `Grant Access`. In the resulting modal, paste the following permissions into the filter window and add them one by one to the principal:
+Finally, you will need to set up proper IAM permissions for your project. Navigate to [this page](https://console.cloud.google.com/projectselector2/iam-admin/iam) and select your project, then press `Grant Access`. In the resulting modal, paste the following permissions into the filter window and add them one by one to a principal on your project:
 
 - `roles/artifactregistry.admin`
 - `roles/cloudbuild.builds.editor`
