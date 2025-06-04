@@ -1,9 +1,84 @@
+# 🦙 PersonalLM
+
+This repo helps you provision a personal and private OpenAI and LangChain-compatible LLM inference endpoint
+on [Google Cloud Run GPUs](https://cloud.google.com/run). Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing personal projects where privacy is an important consideration.
+
+It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
+to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
+Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit
+model size. See the [model choice](#-model-customization) section below for more details.
+
+## 🏎️ Quickstart
+
+### Setting up Google Cloud resources
+
+> [!NOTE] The initial setup for this project is the same as the official Cloud Run guide [here](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama).
+
+If you don't already have a Google Cloud account, you will first need to [sign up](https://cloud.google.com/).
+
+Navigate to the [Google Cloud project selector](https://console.cloud.google.com/projectselector2/home/dashboard) and select or create a Google Cloud project. You will need to [enabled billing for the project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project), since GPUs are currently not part of Google Cloud's free tier.
+
+Next, you must enable access to Artifact Registry, Cloud Build, Cloud Run, and Cloud Storage APIs for your project. [Click here](https://console.cloud.google.com/apis/enableflow?apiid=artifactregistry.googleapis.com,cloudbuild.googleapis.com,run.googleapis.com,storage.googleapis.com) and select your newly created project, then follow the instructions to do so.
+
+![](/static/img/enable-apis.png)
+
+GPUs are not part of the default project quota, so you will need to submit a quota increase request. From [this page](https://console.cloud.google.com/projectselector2/iam-admin/quotas), select your project, then filter by `Total Nvidia L4 GPU allocation without zonal redundancy, per project per region` in the search bar. Find your desired region, then click the side menu and press `Edit quota`:
+
+![](/static/img/quotas.png)
+
+Enter a value (I used `5`), and submit a request. While the prompt claims it may take a few days for the request to process, mine did almost immediately.
+
+Finally, you will need to set up proper IAM permissions for your project. Navigate to [this page](https://console.cloud.google.com/projectselector2/iam-admin/iam) and select your project, then press `Grant Access`. In the resulting modal, paste the following permissions into the filter window and add them one by one to the principal:
+
+- `roles/artifactregistry.admin`
+- `roles/cloudbuild.builds.editor`
+- `roles/run.admin`
+- `roles/resourcemanager.projectIamAdmin`
+- `roles/iam.serviceAccountUser`
+- `roles/serviceusage.serviceUsageConsumer`
+- `roles/storage.admin`
+
+![](/static/img/grant-access.png)
+
+At the end, your screen should look something like this:
+
+![](/static/img/access.png)
+
+### Deploying your endpoint
+
+Now, clone this repo if you haven't already and switch your working directory to be the cloned folder:
+
+```bash
+git clone https://github.com/jacoblee93/personallm.git
+cd personallm
+```
+
+Rename the `.env.example` file to `.env`. Run something similar to the following command to randomly generate an API key:
+
 ```bash
 openssl rand -base64 32
 ```
 
+Then paste this value into the `API_KEYS` field. You can provide multiple API keys by comma separating them here, so make sure that none of your key values contain commas.
+
+Install and initialize the `gcloud` CLI if you haven't already by [following these instructions](https://cloud.google.com/sdk/docs/install). If you already have the CLI installed, you may need to run `gcloud components update` to make sure you are on the latest CLI version.
+
+Next, set your `gcloud` CLI project to be your project name:
+
 ```bash
-gcloud run deploy ollama-gemma \
+gcloud config set project YOUR_PROJECT_NAME
+```
+
+And set the region to be the same one as where you requested GPU quota:
+
+```bash
+gcloud config set run/region YOUR_REGION
+```
+
+Finally, run the following command to deploy your new inference endpoint!
+
+```bash
+gcloud run deploy personallm \
   --source . \
   --concurrency 4 \
   --cpu 8 \
@@ -16,3 +91,30 @@ gcloud run deploy ollama-gemma \
   --no-gpu-zonal-redundancy \
   --timeout=600
 ```
+
+When prompted with something like `Allow unauthenticated invocations to [personallm] (y/N)?`, you should respond with `y`, since the internal proxy will handle authentication.
+
+Note that deployments are quite slow since model weights are bundled directly into the Docekrfile - expect this step to take around 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
+
+## 💪 Trying it out
+
+You can call your endpoint in a similar way to how you'd call an OpenAI model, only using your generated API key and your provisioned endpoint. Here are some examples:
+
+## 🔧 Model customization
+
+The base configuration in this repo serves a 14 billion parameter model ([Qwen 3](https://ollama.com/library/qwen3:14b)) clocked at around 25 tokens per second. This model is quite capable and also supports [tool calling](https://ollama.com/blog/tool-support), which makes it more useful for things like agents, but if speed becomes a concern you might try smaller models such as Google's [Gemma 3](https://ollama.com/library/gemma3). You can also run [DeepSeek-R1](https://ollama.com/library/deepseek-r1:14b) if you do not need tool calling.
+
+To customize the served model, open your `Dockerfile` and modify the `ENV MODEL qwen3:14b` line to be a different model from [Ollama's registry](https://ollama.com/search):
+
+```ini
+# Store the model weights in the container image
+# ENV MODEL gemma3:4b
+# ENV MODEL deepseek-r1:14b
+ENV MODEL qwen3:14b
+```
+
+Note that you will also have to change your clientside code to specify the new model as a parameter.
+
+## 🙏 Thank you!
+
+If you have any questions or comments, please open an issue on this repo. You can also reach me [@Hacubu](https://x.com/Hacubu) on X (formerly Twitter).

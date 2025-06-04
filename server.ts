@@ -18,7 +18,9 @@ const server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
     if (!req.headers["authorization"]?.startsWith("Bearer ")) {
       res.writeHead(401);
-      res.end("Unknown authorization scheme - use Bearer <API_KEY>");
+      res.end(
+        'Unknown authorization scheme - must provide an authorization header set to "Bearer VALID_API_KEY"',
+      );
       return;
     }
 
