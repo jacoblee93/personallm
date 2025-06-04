@@ -10,7 +10,7 @@ This project extends [Google's official guide](https://cloud.google.com/run/docs
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
 Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit effective model size. See the [model customization](#-model-customization) section below for more details.
 
-## Table of contents
+## 📋 Table of contents
 
 - [Quickstart](#️-quickstart)
 - [Usage](#-trying-it-out)
