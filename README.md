@@ -23,7 +23,7 @@ Once deployed, it supports simple bearer authentication via API key, requires no
 It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
 Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit
-model size. See the [model choice](#-model-customization) section below for more details.
+model size. See the [model customization](#-model-customization) section below for more details.
 
 ## 🏎️ Quickstart
 
