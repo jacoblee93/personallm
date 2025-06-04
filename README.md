@@ -1,7 +1,23 @@
 # 🦙 PersonalLM
 
 This repo helps you provision a personal and private OpenAI and LangChain-compatible LLM inference endpoint
-on [Google Cloud Run GPUs](https://cloud.google.com/run). Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing personal projects where privacy is an important consideration.
+on [Google Cloud Run GPUs](https://cloud.google.com/run). Once deployed, it supports simple bearer authentication via API key, requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://myendpoint.europe-west1.run.app/v1",
+    api_key="GENERATED_API_KEY",
+)
+
+response = client.chat.completions.create(
+  model="qwen3:14b",
+  messages=[
+    {"role": "user", "content": "What is 2 + 2?"}
+  ]
+)
+```
 
 It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
@@ -23,7 +39,7 @@ Next, you must enable access to Artifact Registry, Cloud Build, Cloud Run, and C
 
 ![](/static/img/enable-apis.png)
 
-GPUs are not part of the default project quota, so you will need to submit a quota increase request. From [this page](https://console.cloud.google.com/projectselector2/iam-admin/quotas), select your project, then filter by `Total Nvidia L4 GPU allocation without zonal redundancy, per project per region` in the search bar. Find your desired region, then click the side menu and press `Edit quota`:
+GPUs are not part of the default project quota, so you will need to submit a quota increase request. From [this page](https://console.cloud.google.com/projectselector2/iam-admin/quotas), select your project, then filter by `Total Nvidia L4 GPU allocation without zonal redundancy, per project per region` in the search bar. Find your desired region (Google currently recommends `europe-west1`, note that [pricing](https://cloud.google.com/run/pricing) may vary depending on region), then click the side menu and press `Edit quota`:
 
 ![](/static/img/quotas.png)
 
@@ -95,7 +111,7 @@ gcloud run deploy personallm \
 
 When prompted with something like `Allow unauthenticated invocations to [personallm] (y/N)?`, you should respond with `y`. The internal proxy will handle authentication, and we want our endpoint to be reachable from anywhere for ease of use.
 
-Note that deployments are quite slow since model weights are bundled directly into the Docekrfile - expect this step to take around 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
+Note that deployments are quite slow since model weights are bundled directly into the Dockerfile - expect this step to take around 20 minutes. Once it finishes, your terminal should print a `Service URL`, and that's it! You now have a personal, private LLM inference endpoint!
 
 ## 💪 Trying it out
 
@@ -112,8 +128,8 @@ from openai import OpenAI
 
 # Note the /v1 suffix
 client = OpenAI(
-    base_url='https://YOUR_SERVICE_URL/v1',
-    api_key='YOUR_API_KEY',
+    base_url="https://YOUR_SERVICE_URL/v1",
+    api_key="YOUR_API_KEY",
 )
 
 response = client.chat.completions.create(
@@ -135,7 +151,7 @@ from langchain_ollama import ChatOllama
 
 model = ChatOllama(
     model="qwen3:14b",
-    base_url="https:/YOUR_SERVICE_URL",
+    base_url="https://YOUR_SERVICE_URL",
     client_kwargs={
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
