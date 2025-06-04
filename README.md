@@ -20,7 +20,7 @@ response = client.chat.completions.create(
 
 Once deployed, it requires no infrastructure management and scales down to zero instances when not in use. This makes it suitable for developing projects where privacy is an important consideration.
 
-It contains a very simple proxy server that runs in the Cloud Run instance that handles auth and forwards requests
+It contains a proxy server that runs in the Cloud Run instance that handles auth and forwards requests
 to a concurrently running [Ollama](https://ollama.ai/) instance. This means that you can serve any model from
 Ollama's registry in theory, though in practice caps on Cloud Run resources (for memory, currently 32 Gibibytes) limit
 model size. See the [model customization](#-model-customization) section below for more details.
