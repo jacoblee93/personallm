@@ -164,7 +164,7 @@ See [LangChain's docs](https://python.langchain.com/) for examples of advanced f
 npm install openai
 ```
 
-```js
+```ts
 import OpenAI from "openai";
 
 // Note the /v1 suffix
@@ -187,7 +187,9 @@ See [OpenAI's SDK docs](https://platform.openai.com/docs/overview) for examples 
 npm install @langchain/ollama @langchain/core
 ```
 
-```js
+```ts
+import { ChatOllama } from "@langchain/ollama";
+
 const model = new ChatOllama({
   model: "qwen3:14b",
   baseUrl: "https://YOUR_SERVICE_URL",
